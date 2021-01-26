@@ -1,5 +1,6 @@
 package fr.istic.mob.bus2mp;
 
+import android.content.ContentProviderClient;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -10,6 +11,7 @@ import com.google.android.material.snackbar.Snackbar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import android.os.RemoteException;
 import android.view.View;
 
 import android.view.Menu;
@@ -33,16 +35,18 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        Cursor busroutes = getContentResolver().query(Uri.parse("content://fr.istic.mob.busmp.provider/busroute"),
-                null,
-                null,
-                null,
-                null);
-
-        while(busroutes.moveToNext()){
-            int nameIndex = busroutes.getColumnIndex("route_short_name");
-            String name = busroutes.getString(nameIndex);
-            System.out.println("provider - BUS ROUTES :"+name);
+        Uri yourURI = Uri.parse("content://fr.istic.mob.busmp.provider.StarProvider/busroute");
+        Cursor busroutes = getContentResolver().query(yourURI, null, null, null, null);
+        if(busroutes != null) {
+            System.out.println("nb column : "+busroutes.getColumnCount());
+            System.out.println("nb row : "+busroutes.getCount());
+            while (busroutes.moveToNext()) {
+                int nameIndex = busroutes.getColumnIndex("route_short_name");
+                String name = busroutes.getString(nameIndex);
+                System.out.println("provider - BUS ROUTES :" + name);
+            }
+        }else{
+            System.out.println("VIDE!");
         }
     }
 
