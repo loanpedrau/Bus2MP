@@ -1,5 +1,6 @@
 package fr.istic.mob.bus2mp;
 
+import android.app.Activity;
 import android.content.ContentProviderClient;
 import android.database.Cursor;
 import android.net.Uri;
@@ -10,65 +11,42 @@ import com.google.android.material.snackbar.Snackbar;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 import android.os.RemoteException;
+import android.view.LayoutInflater;
 import android.view.View;
 
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.FrameLayout;
+import android.widget.Spinner;
+import android.widget.TextView;
 
-public class MainActivity extends AppCompatActivity {
+import java.util.ArrayList;
+
+public class MainActivity extends FragmentActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
+        if (savedInstanceState == null) {
+            Fragment firstFragment = new FirstFragment();
+            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+            ft.add(R.id.fragmentToDisplay, firstFragment).commit();
 
-        Uri yourURI = Uri.parse("content://fr.istic.mob.busmp.provider.StarProvider/busroute");
-        Cursor busroutes = getContentResolver().query(yourURI, null, null, null, null);
-        if(busroutes != null) {
-            System.out.println("nb column : "+busroutes.getColumnCount());
-            System.out.println("nb row : "+busroutes.getCount());
-            while (busroutes.moveToNext()) {
-                int nameIndex = busroutes.getColumnIndex("route_short_name");
-                String name = busroutes.getString(nameIndex);
-                System.out.println("provider - BUS ROUTES :" + name);
-            }
-        }else{
-            System.out.println("VIDE!");
-        }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
         }
 
-        return super.onOptionsItemSelected(item);
     }
+
 }
