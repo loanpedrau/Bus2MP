@@ -44,7 +44,12 @@ public class FirstFragment extends Fragment {
                     public void onClick(View v) {
                         if(dateSelected && timeSelected && directionSelected) {
                             Fragment secondFragment = new SecondFragment();
-                            FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
+                            FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction().setCustomAnimations(
+                                    R.anim.slide_in,  // enter
+                                    R.anim.fade_out,  // exit
+                                    R.anim.fade_in,   // popEnter
+                                    R.anim.slide_out  // popExit
+                            );
                             ft.replace(R.id.fragmentToDisplay, secondFragment).addToBackStack(null).commit();
                         }
                     }

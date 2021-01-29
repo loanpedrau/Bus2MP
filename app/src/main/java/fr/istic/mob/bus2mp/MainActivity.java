@@ -25,6 +25,7 @@ import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -35,10 +36,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import fr.istic.mob.bus2mp.model.BusRoute;
+import fr.istic.mob.bus2mp.model.Stop;
 
 public class MainActivity extends FragmentActivity {
 
     private List<BusRoute> allBusRoute = new ArrayList<BusRoute>();
+    private List<Stop> allStops = new ArrayList<Stop>();
+
+    private String[] STOPS;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +51,13 @@ public class MainActivity extends FragmentActivity {
         setContentView(R.layout.activity_main);
 
         loadBusRouteData();
+        loadStopData();
+        STOPS = getAllStopsName();
+
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, STOPS);
+        AutoCompleteTextView textView = (AutoCompleteTextView) findViewById(R.id.autoCompleteTextView);
+        textView.setAdapter(adapter);
 
         if (savedInstanceState == null) {
             Fragment firstFragment = new FirstFragment(allBusRoute);
@@ -80,6 +92,50 @@ public class MainActivity extends FragmentActivity {
             busRouteCursor.close();
         }
 
+    }
+
+    private void loadStopData(){
+        Uri stopURI = Uri.parse("content://fr.istic.mob.busmp.provider.StarProvider/stop");
+        Cursor stopCursor = getContentResolver().query(stopURI, null, null, null, null);
+        try {
+            while (stopCursor.moveToNext()) {
+                int stop_id = stopCursor.getInt(0);
+                int stop_code = stopCursor.getInt(1);
+                String stop_name = stopCursor.getString(2);
+                String stop_desc = stopCursor.getString(3);
+                float stop_lat = stopCursor.getFloat(4);
+                float stop_long = stopCursor.getFloat(5);
+                String zone_id = stopCursor.getString(6);
+                String stop_url = stopCursor.getString(7);
+                String location_type = stopCursor.getString(8);
+                String parent_station = stopCursor.getString(9);
+                String stop_timezone = stopCursor.getString(10);
+                int wheelchair_boarding = stopCursor.getInt(11);
+
+                Stop stop = new Stop(stop_id, stop_code, stop_name, stop_desc, stop_lat, stop_long, zone_id,
+                        stop_url, location_type, parent_station, stop_timezone, wheelchair_boarding);
+                allStops.add(stop);
+
+            }
+        } finally {
+            stopCursor.close();
+        }
+    }
+
+    private String[] getAllStopsName(){
+        ArrayList<String> stops = new ArrayList<>();
+        for(Stop stop : allStops){
+            if(!stops.contains(stop.getStop_name())){
+                stops.add(stop.getStop_name());
+            }
+        }
+        String[] stopNames = new String[stops.size()];
+        int i=0;
+        for(String name : stops){
+            stopNames[i] = name;
+            i++;
+        }
+        return stopNames;
     }
 
 }
