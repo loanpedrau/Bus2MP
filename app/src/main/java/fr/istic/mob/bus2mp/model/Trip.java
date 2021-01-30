@@ -13,7 +13,16 @@ public class Trip {
     private String wheelchair_accessible;
     private String bikes_allowed;
 
-    public Trip(String route_id, String service_id, String trip_id, String trip_headsign, String trip_short_name, String direction_id, String block_id, String shape_id, String wheelchair_accessible, String bikes_allowed) {
+    public Trip(String route_id,
+                String service_id,
+                String trip_id,
+                String trip_headsign,
+                String trip_short_name,
+                String direction_id,
+                String block_id,
+                String shape_id,
+                String wheelchair_accessible,
+                String bikes_allowed) {
         this.route_id = route_id;
         this.service_id = service_id;
         this.trip_id = trip_id;

@@ -32,16 +32,22 @@ import android.widget.FrameLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
 import fr.istic.mob.bus2mp.model.BusRoute;
+import fr.istic.mob.bus2mp.model.Calendar;
 import fr.istic.mob.bus2mp.model.Stop;
+import fr.istic.mob.bus2mp.model.StopTime;
+import fr.istic.mob.bus2mp.model.Trip;
 
 public class MainActivity extends FragmentActivity {
 
     private List<BusRoute> allBusRoute = new ArrayList<BusRoute>();
     private List<Stop> allStops = new ArrayList<Stop>();
+    private List<Trip> allTrips = new ArrayList<>();
+    private List<Calendar> allCalendar = new ArrayList<>();
 
     private String[] STOPS;
 
@@ -52,15 +58,16 @@ public class MainActivity extends FragmentActivity {
 
         loadBusRouteData();
         loadStopData();
-        STOPS = getAllStopsName();
+        loadTripData();
 
+        STOPS = getAllStopsName();
 
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, STOPS);
         AutoCompleteTextView textView = (AutoCompleteTextView) findViewById(R.id.autoCompleteTextView);
         textView.setAdapter(adapter);
 
         if (savedInstanceState == null) {
-            Fragment firstFragment = new FirstFragment(allBusRoute);
+            Fragment firstFragment = new FirstFragment(this,allBusRoute,allStops,allTrips, allCalendar );
             FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
             ft.add(R.id.fragmentToDisplay, firstFragment, "firstFragment").addToBackStack(null).commit();
 
@@ -91,7 +98,6 @@ public class MainActivity extends FragmentActivity {
         } finally {
             busRouteCursor.close();
         }
-
     }
 
     private void loadStopData(){
@@ -119,6 +125,35 @@ public class MainActivity extends FragmentActivity {
             }
         } finally {
             stopCursor.close();
+        }
+    }
+
+    private void loadTripData(){
+        Uri stopURI = Uri.parse("content://fr.istic.mob.busmp.provider.StarProvider/trip");
+        Cursor tripCursor = getContentResolver().query(stopURI, null, null, null, null);
+        for(String name : tripCursor.getColumnNames()){
+            System.out.println(name);
+        }
+        try {
+            while (tripCursor.moveToNext()) {
+                String route_id = tripCursor.getString(0);
+                String service_id = tripCursor.getString(1);
+                String trip_id = tripCursor.getString(2);
+                String trip_headsign = tripCursor.getString(3);
+                String trip_short_name = tripCursor.getString(4);
+                String direction_id = tripCursor.getString(5);
+                String block_id = tripCursor.getString(6);
+                String shape_id = tripCursor.getString(7);
+                String wheelchair_accessible = tripCursor.getString(8);
+                String bikes_allowed = tripCursor.getString(9);
+
+                Trip trip = new Trip(route_id,service_id, trip_id, trip_headsign,trip_short_name,
+                        direction_id, block_id, shape_id, wheelchair_accessible, bikes_allowed);
+                allTrips.add(trip);
+
+            }
+        } finally {
+            tripCursor.close();
         }
     }
 

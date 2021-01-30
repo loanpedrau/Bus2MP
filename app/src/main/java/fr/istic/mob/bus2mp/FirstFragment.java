@@ -1,5 +1,6 @@
 package fr.istic.mob.bus2mp;
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,23 +15,39 @@ import android.widget.TimePicker;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
+import java.sql.Time;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import fr.istic.mob.bus2mp.model.BusRoute;
+import fr.istic.mob.bus2mp.model.Calendar;
+import fr.istic.mob.bus2mp.model.Stop;
+import fr.istic.mob.bus2mp.model.StopTime;
+import fr.istic.mob.bus2mp.model.Trip;
 
 public class FirstFragment extends Fragment {
 
     private Spinner spinnerLigne;
     private Spinner spinnerDirection;
     private List<BusRoute> allBusRoute;
+    private List<Stop> allStops;
+    private List<Trip> allTrips;
+    private List<Calendar> allCalendar;
     private boolean dateSelected = false;
     private boolean timeSelected = false;
     private boolean directionSelected = false;
+    private Activity mainActivity;
+    private TimePicker timePicker;
+    private DatePicker datePicker;
 
-    public FirstFragment(List<BusRoute> allBusRoute){
+    public FirstFragment(Activity activity ,List<BusRoute> allBusRoute, List<Stop> allStops, List<Trip> allTrips, List<Calendar> allCalendar){
         super();
         this.allBusRoute = allBusRoute;
+        this.allStops = allStops;
+        this.allTrips = allTrips;
+        this.allCalendar = allCalendar;
+        this.mainActivity = activity;
     }
 
     @Override
@@ -43,7 +60,12 @@ public class FirstFragment extends Fragment {
                     @Override
                     public void onClick(View v) {
                         if(dateSelected && timeSelected && directionSelected) {
-                            Fragment secondFragment = new SecondFragment();
+                            int route_id = allBusRoute.get(spinnerLigne.getSelectedItemPosition()).getRoute_id();
+                            System.out.println("route id : "+route_id);
+                            String direction = (String) spinnerDirection.getSelectedItem();
+                            Time time = new Time(timePicker.getHour(),timePicker.getMinute(),0);
+                            Date date = new Date(datePicker.getYear(), datePicker.getMonth(), datePicker.getDayOfMonth());
+                            Fragment secondFragment = new SecondFragment(mainActivity, route_id,allStops, allTrips,direction, time, date);
                             FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction().setCustomAnimations(
                                     R.anim.slide_in,  // enter
                                     R.anim.fade_out,  // exit
@@ -96,7 +118,7 @@ public class FirstFragment extends Fragment {
                 }
         );
 
-        final TimePicker timePicker = view.findViewById(R.id.timePicker);
+        timePicker = view.findViewById(R.id.timePicker);
         timePicker.setOnTimeChangedListener(
                 new TimePicker.OnTimeChangedListener() {
                     @Override
@@ -106,7 +128,7 @@ public class FirstFragment extends Fragment {
                 }
         );
 
-        final DatePicker datePicker = view.findViewById(R.id.datePicker);
+        datePicker = view.findViewById(R.id.datePicker);
         datePicker.setOnDateChangedListener(
                 new DatePicker.OnDateChangedListener() {
                     @Override
@@ -119,9 +141,4 @@ public class FirstFragment extends Fragment {
         return view;
     }
 
-    private void switchToFragment2(){
-        Fragment secondFragment = new SecondFragment();
-        FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
-        ft.replace(R.id.fragmentToDisplay, secondFragment).addToBackStack(null).commit();
-    }
 }

@@ -12,7 +12,8 @@ public class StopTime {
     private String drop_off_type;
     private String shape_dist_traveled;
 
-    public StopTime(String trip_id, String arrival_time, String departure_time, String stop_id, String stop_sequence, String stop_headsign, String pickup_type, String drop_off_type, String shape_dist_traveled) {
+    public StopTime(String trip_id, String arrival_time, String departure_time, String stop_id, String stop_sequence,
+                    String stop_headsign, String pickup_type, String drop_off_type, String shape_dist_traveled) {
         this.trip_id = trip_id;
         this.arrival_time = arrival_time;
         this.departure_time = departure_time;
