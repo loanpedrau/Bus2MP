@@ -12,6 +12,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 
 import java.sql.Time;
 import java.util.ArrayList;
@@ -77,7 +78,13 @@ public class SecondFragment extends Fragment {
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                         String stopNameClicked = stopNames.get(position);
                         ThirdFragment thirdFragment = new ThirdFragment(mainActivity,route_id, direction, stopNameClicked, time, date);
-
+                        FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction().setCustomAnimations(
+                                R.anim.slide_in,  // enter
+                                R.anim.fade_out,  // exit
+                                R.anim.fade_in,   // popEnter
+                                R.anim.slide_out  // popExit
+                        );
+                        ft.replace(R.id.fragmentToDisplay, thirdFragment).addToBackStack(null).commit();
                     }
                 }
         );
