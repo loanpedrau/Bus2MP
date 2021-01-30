@@ -124,8 +124,6 @@ public class ThirdFragment extends Fragment {
                     Uri stopTimeURI = Uri.parse("content://fr.istic.mob.busmp.provider.StarProvider/stop_time");
                     Cursor stopTimeCursor = mainActivity.getContentResolver().query(stopTimeURI, null, "trip_id=" + trip_id+" AND stop_id="+stop_id, null, null);
                     while(stopTimeCursor.moveToNext()) {
-                        String horraire = stopTimeCursor.getString(2);
-                        System.out.println(horraire);
                         hours.add(stopTimeCursor.getString(2));
                     }
                     stopTimeCursor.close();
