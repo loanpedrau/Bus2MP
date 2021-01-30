@@ -65,7 +65,6 @@ public class SecondFragment extends Fragment {
         }
         ListView listViewStops = view.findViewById(R.id.listViewStops);
 
-
         adapter =new ArrayAdapter<String>(mainActivity,
                 android.R.layout.simple_list_item_1,
                 stopNames);
