@@ -9,27 +9,16 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.DatePicker;
 import android.widget.ListView;
-import android.widget.Spinner;
-import android.widget.TimePicker;
-
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
-
 import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-
-import fr.istic.mob.bus2mp.model.BusRoute;
-import fr.istic.mob.bus2mp.model.Calendar;
 import fr.istic.mob.bus2mp.model.Stop;
-import fr.istic.mob.bus2mp.model.StopTime;
-import fr.istic.mob.bus2mp.model.Trip;
 
 public class ThirdFragment extends Fragment {
 
@@ -43,6 +32,7 @@ public class ThirdFragment extends Fragment {
     private Thread loadHours;
     private Time time;
     private Date date;
+    private int stopIdForFragment4;
 
     public ThirdFragment(Activity activity, int route_id, String direction, String stop, Time time, Date date){
         super();
@@ -52,28 +42,69 @@ public class ThirdFragment extends Fragment {
         this.route_id = route_id;
         this.time = time;
         this.date = date;
+        this.stopIdForFragment4 =0;
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.third_fragment, container, false);
-        loadStopDataWithStopName(this.stopName);
-        initThreadSerchHours(route_id,direction);
-        loadHours.start();
-        ListView listViewHours = view.findViewById(R.id.listViewHours);
-        System.out.println("research :"+route_id+"dir :"+direction);
-        try {
-            loadHours.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        hours = keepHoursOnlyAfterMySettings();
-        adapter =new ArrayAdapter<String>(mainActivity,
-                android.R.layout.simple_list_item_1,
-                hours);
+        if(hours.size()==0) {
+            loadStopDataWithStopName(this.stopName);
+            initThreadSerchHours(route_id, direction);
+            loadHours.start();
+            ListView listViewHours = view.findViewById(R.id.listViewHours);
+            try {
+                loadHours.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            hours = keepHoursOnlyAfterMySettings();
+            adapter = new ArrayAdapter<String>(mainActivity,
+                    android.R.layout.simple_list_item_1,
+                    hours);
 
-        listViewHours.setAdapter(adapter);
+            listViewHours.setAdapter(adapter);
+            listViewHours.setOnItemClickListener(
+                    new AdapterView.OnItemClickListener() {
+                        @Override
+                        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                            String h = hours.get(position);
+                            FourFragment fourFragment = new FourFragment(mainActivity, stopIdForFragment4, h);
+                            FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction().setCustomAnimations(
+                                    R.anim.slide_in,  // enter
+                                    R.anim.fade_out,  // exit
+                                    R.anim.fade_in,   // popEnter
+                                    R.anim.slide_out  // popExit
+                            );
+                            ft.replace(R.id.fragmentToDisplay, fourFragment).addToBackStack(null).commit();
+                        }
+                    }
+            );
+        }else{
+            ListView listViewHours = view.findViewById(R.id.listViewHours);
+            adapter = new ArrayAdapter<String>(mainActivity,
+                    android.R.layout.simple_list_item_1,
+                    hours);
+
+            listViewHours.setAdapter(adapter);
+            listViewHours.setOnItemClickListener(
+                    new AdapterView.OnItemClickListener() {
+                        @Override
+                        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                            String h = hours.get(position);
+                            FourFragment fourFragment = new FourFragment(mainActivity, stopIdForFragment4, h);
+                            FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction().setCustomAnimations(
+                                    R.anim.slide_in,  // enter
+                                    R.anim.fade_out,  // exit
+                                    R.anim.fade_in,   // popEnter
+                                    R.anim.slide_out  // popExit
+                            );
+                            ft.replace(R.id.fragmentToDisplay, fourFragment).addToBackStack(null).commit();
+                        }
+                    }
+            );
+        }
         return view;
     }
 
@@ -112,7 +143,6 @@ public class ThirdFragment extends Fragment {
             boolean alreadyFill = false;
             for(Stop stop : allStops) {
                 int stop_id = stop.getStop_id();
-                System.out.println("Search for stop id :"+stop_id+" and route id :"+route_id+" trip headsign :"+stopNameDirection);
                 Uri tripURI = Uri.parse("content://fr.istic.mob.busmp.provider.StarProvider/trip");
                 Cursor tripWithSameRouteIDCursor = mainActivity.getContentResolver().query(tripURI, null, "route_id=" + route_id+" AND trip_headsign LIKE \'%"+stopNameDirection+"%\'", null, null);
                 tripWithSameRouteIDCursor.moveToNext();
@@ -126,6 +156,7 @@ public class ThirdFragment extends Fragment {
                     while(stopTimeCursor.moveToNext()) {
                         hours.add(stopTimeCursor.getString(2));
                     }
+                    stopIdForFragment4 = stop_id;
                     stopTimeCursor.close();
                 }
                 if(hours.size()>0){

@@ -104,18 +104,6 @@ public class SecondFragment extends Fragment {
         return trip_id;
     }
 
-    private ArrayList<StopTime> getStopTimeofTrips(ArrayList<Trip> allTrips){
-        ArrayList<StopTime> stopTimesCorrespondingOfTrips = new ArrayList<>();
-        for(Trip trip : allTrips){
-            for(StopTime stopTime : stopTimes){
-                if(trip.getTrip_id().equals(stopTime.getTrip_id())){
-                    stopTimesCorrespondingOfTrips.add(stopTime);
-                }
-            }
-        }
-        return stopTimesCorrespondingOfTrips;
-    }
-
     private ArrayList<Stop> getStopFromStopsTimes(List<StopTime> allStopTimes){
         ArrayList<Stop> stopOfStopTimes = new ArrayList<>();
         for(StopTime stopTime : allStopTimes){
