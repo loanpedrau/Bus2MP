@@ -33,7 +33,6 @@ public class FourFragment extends Fragment {
         ListView listViewStopHours = view.findViewById(R.id.listViewStopHours);
 
         Uri stopTimeURI = Uri.parse("content://fr.istic.mob.busmp.provider.StarProvider/stop_time");
-        System.out.println("h : "+hour+"stop_id : "+stop_id);
         Cursor stopTimeCursor = mainActivity.getContentResolver().query(stopTimeURI, null, "departure_time=\""+this.hour+"\" AND stop_id="+stop_id, null, null);
         stopTimeCursor.moveToNext();
         long trip_id = stopTimeCursor.getLong(0);
