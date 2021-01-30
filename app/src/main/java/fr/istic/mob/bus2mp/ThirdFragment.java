@@ -20,6 +20,8 @@ import androidx.fragment.app.FragmentTransaction;
 
 import java.sql.Time;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
@@ -38,12 +40,18 @@ public class ThirdFragment extends Fragment {
     private ArrayList<String> hours = new ArrayList<>();
     private String stopName;
     private String direction;
+    private Thread loadHours;
+    private Time time;
+    private Date date;
 
     public ThirdFragment(Activity activity, int route_id, String direction, String stop, Time time, Date date){
         super();
         this.mainActivity = activity;
         this.stopName = stop;
         this.direction = direction;
+        this.route_id = route_id;
+        this.time = time;
+        this.date = date;
     }
 
     @Override
@@ -51,19 +59,21 @@ public class ThirdFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.third_fragment, container, false);
         loadStopDataWithStopName(this.stopName);
+        initThreadSerchHours(route_id,direction);
+        loadHours.start();
         ListView listViewHours = view.findViewById(R.id.listViewHours);
-
-        for(Stop stop : allStops){
-            hours.add(stop.getStop_name());
+        System.out.println("research :"+route_id+"dir :"+direction);
+        try {
+            loadHours.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
-
+        hours = keepHoursOnlyAfterMySettings();
         adapter =new ArrayAdapter<String>(mainActivity,
                 android.R.layout.simple_list_item_1,
                 hours);
 
         listViewHours.setAdapter(adapter);
-        Stop stopFound = searchStopCorrespondingToTheBus(route_id,direction);
-        System.out.println("STOP FOUND : "+stopFound.getStop_id()+" - "+stopFound.getStop_code()+" - "+stopFound.getStop_name());
         return view;
     }
 
@@ -94,29 +104,61 @@ public class ThirdFragment extends Fragment {
         }
     }
 
-    private Stop searchStopCorrespondingToTheBus(long route_id, String direction){
-        boolean stopCorrespondingFind = false;
-        Stop stopToFind = null;
-        for(Stop stop : allStops){
-            int stop_id = stop.getStop_id();
-            Uri stopTimeURI = Uri.parse("content://fr.istic.mob.busmp.provider.StarProvider/stop_time");
-            Cursor stopTimeCursor = mainActivity.getContentResolver().query(stopTimeURI, null, "stop_id="+stop_id+"", null, null);
-            try {
-                stopTimeCursor.moveToNext();
-                String trip_id = stopTimeCursor.getString(0);
+    private void initThreadSerchHours(final int route_id, final String direction){
+        loadHours = new Thread(new Runnable() {
+            public void run() {
+            String stopNameDirection = direction.substring(direction.indexOf("(") + 1, direction.indexOf(")")).trim();
+            List<String> stopTimes = new ArrayList<>();
+            boolean alreadyFill = false;
+            for(Stop stop : allStops) {
+                int stop_id = stop.getStop_id();
+                System.out.println("Search for stop id :"+stop_id+" and route id :"+route_id+" trip headsign :"+stopNameDirection);
                 Uri tripURI = Uri.parse("content://fr.istic.mob.busmp.provider.StarProvider/trip");
-                Cursor tripCursor = mainActivity.getContentResolver().query(stopTimeURI, null, "trip_id="+trip_id+"", null, null);
-                tripCursor.moveToNext();
-                String routeID_recup = tripCursor.getString(0);
-                String trip_headsign = tripCursor.getString(3);
-                if((Long.valueOf(routeID_recup) == route_id) && trip_headsign.contains(direction.substring(direction.indexOf("(")+1,direction.indexOf(")")))){
-                    stopToFind = stop;
+                Cursor tripWithSameRouteIDCursor = mainActivity.getContentResolver().query(tripURI, null, "route_id=" + route_id+" AND trip_headsign LIKE \'%"+stopNameDirection+"%\'", null, null);
+                tripWithSameRouteIDCursor.moveToNext();
+                long service_id = tripWithSameRouteIDCursor.getLong(1);
+                tripWithSameRouteIDCursor.close();
+                Cursor tripWithSameRouteIDCursor2 = mainActivity.getContentResolver().query(tripURI,null, "route_id=" + route_id+" AND trip_headsign LIKE \'%"+stopNameDirection+"%\' AND service_id="+service_id, null, null);
+                while(tripWithSameRouteIDCursor2.moveToNext() && !alreadyFill){
+                    long trip_id = tripWithSameRouteIDCursor2.getLong(2);
+                    Uri stopTimeURI = Uri.parse("content://fr.istic.mob.busmp.provider.StarProvider/stop_time");
+                    Cursor stopTimeCursor = mainActivity.getContentResolver().query(stopTimeURI, null, "trip_id=" + trip_id+" AND stop_id="+stop_id, null, null);
+                    while(stopTimeCursor.moveToNext()) {
+                        String horraire = stopTimeCursor.getString(2);
+                        System.out.println(horraire);
+                        hours.add(stopTimeCursor.getString(2));
+                    }
+                    stopTimeCursor.close();
                 }
-                tripCursor.close();
-            } finally {
-                stopTimeCursor.close();
+                if(hours.size()>0){
+                    alreadyFill = true;
+                }
+                tripWithSameRouteIDCursor2.close();
+            }
+            }
+        });
+    }
+
+    private ArrayList<String> keepHoursOnlyAfterMySettings(){
+        ArrayList<Time> hoursToKeep = new ArrayList<>();
+        for(String hour : hours){
+            String[] data = hour.split(":");
+            String theHour = data[0];
+            String min = data[1];
+            Time t = new Time(Integer.valueOf(theHour), Integer.valueOf(min), 0);
+            if(t.after(time)){
+                hoursToKeep.add(t);
             }
         }
-        return stopToFind;
+        Collections.sort(hoursToKeep, new Comparator<Time>(){
+            public int compare(Time time1, Time time2){
+                return time1.after(time2) ? 1 : -1;
+            }
+        });
+        ArrayList<String> hoursToKeepStr = new ArrayList<>();
+        for(Time t : hoursToKeep){
+            hoursToKeepStr.add(t.toString());
+        }
+        return hoursToKeepStr;
     }
 }
